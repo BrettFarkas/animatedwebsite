@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brett Farkas Fan Page - Animated</title>
+  <style>
+    /* Fullscreen canvas and dark background */
+    html, body { margin: 0; padding: 0; overflow: hidden; height: 100vh; background: #FFFFFF; }
+    canvas { display: block; }
+    /* Optional fallback for non-canvas support */
+    .no-canvas { color: white; text-align: center; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <canvas id="animationCanvas"></canvas>
+  <noscript>
+    <div class="no-canvas">Please enable JavaScript to see the animated menu.</div>
+  </noscript>
+  <script>
+    const canvas = document.getElementById('animationCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+
+    // List of all links from the original site
+    const links = [
+      { label: 'The Bible II: Paradise Omnipresent', url: 'https://www.amazon.com/Bible-II-Paradise-Omnipresent-prodigal/dp/1523349328/' },
+      { label: 'The Runners', url: 'https://www.amazon.com/Runners-Brett-Farkas/dp/1536853836/' },
+      { label: 'The Magic Farmer', url: 'https://www.amazon.com/Magic-Farmer-Field-Fairies-Magician/dp/1518782884/' },
+      { label: 'Girl at the Beach', url: 'https://www.amazon.com/Girl-at-Beach-Brett-Farkas/dp/1532909632/' },
+      { label: 'Biopolis', url: 'https://www.amazon.com/Biopolis-Brett-Farkas/dp/1545092494/' },
+      { label: 'The Merry Monk', url: 'https://www.amazon.com/Merry-Monk-Brett-Farkas/dp/1727874692/' },
+      { label: 'NFTs', url: 'https://opensea.io/BrettFarkas/created' },
+      { label: 'Video Games', url: '/games' },
+      { label: 'Computer Programs', url: 'https://www.brettfarkas.org/programs' },
+      { label: 'IMDB', url: 'https://www.imdb.com/title/tt14845030/?ref_=nm_ov_bio_lk' },
+      { label: 'YouTube', url: 'https://www.youtube.com/channel/UC3zTywpxJ96HrSjbEMR1ZxA' }
+    ];
+
+    const circles = [];
+
+    // Generate a random pastel color in HSL format
+    
+function randomPastel() {
+  const hue = Math.random() * 360;
+  return `hsl(${hue}, 70%, 85%)`;
+}
+
+
+
+    function init() {
+      resize();
+      // Initialize circles in a ring around the center
+      const ringRadius = Math.min(width, height) / 3;
+      links.forEach((link, i) => {
+        const angle = (i / links.length) * Math.PI * 2;
+        const x = width / 2 + Math.cos(angle) * ringRadius;
+        const y = height / 2 + Math.sin(angle) * ringRadius;
+        const speed = 1 + Math.random() * 1.5;
+        const vx = Math.cos(angle + Math.PI / 2) * speed;
+        const vy = Math.sin(angle + Math.PI / 2) * speed;
+        const color = randomPastel();
+        circles.push({ x, y, vx, vy, radius: 60, label: link.label, url: link.url, color });
+      });
+      canvas.addEventListener('click', onClick);
+      requestAnimationFrame(loop);
+    }
+
+    function onClick(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      circles.forEach(c => {
+        const dist = Math.hypot(mx - c.x, my - c.y);
+        if (dist < c.radius) {
+          window.location.href = c.url;
+        }
+      });
+    }
+
+    function update() {
+      circles.forEach(c => {
+        c.x += c.vx;
+        c.y += c.vy;
+        // Bounce off walls
+        if (c.x - c.radius < 0 || c.x + c.radius > width) c.vx *= -1;
+        if (c.y - c.radius < 0 || c.y + c.radius > height) c.vy *= -1;
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+      circles.forEach(c => {
+        // Draw circle with pastel color
+        ctx.fillStyle = c.color;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+        ctx.fill();
+        // Draw text with wrapping
+        ctx.fillStyle = '#000000';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        wrapText(ctx, c.label, c.x, c.y, c.radius * 1.8, 18);
+      });
+    }
+
+    // Utility to wrap text inside a given width
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      const lines = [];
+      words.forEach(word => {
+        const testLine = line + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && line !== '') {
+          lines.push(line.trim());
+          line = word + ' ';
+        } else {
+          line = testLine;
+        }
+      });
+      lines.push(line.trim());
+      lines.forEach((ln, i) => {
+        ctx.fillText(ln, x, y - ((lines.length - 1) * lineHeight) / 2 + i * lineHeight);
+      });
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
